@@ -1,19 +1,48 @@
+/**
+ * Minimal assembler in javascript
+ * andyw, 24/03/2014
+ */
+
 var fs     = require('fs');
 var Buffer = require('buffer').Buffer;
 
 /**
  * Assemble the specified filename to an array of bytes
  */
-function assemble(filename) {
+var assemble = function(filename) {
+    
+    // initialize assembler vars
+    var relocs             = [], 
+        instruction_name   = [], 
+        row                = [],
+        offset_names       = [],
+        instruction_offset = [],
+        tmp                = [];
+    var i, i2, i3;
 
-}
+    var tmprow;
+    var names = 0, offset = 0, offset_there, actual_line = 0;
+    var relocnotfound;
+
+    // read input file and iterate line by line
+    fs.readFileSync(filename, 'utf8')
+        .replace("\r", "")
+        .split("\n")
+        .map(function(line) {
+          
+            console.log('line is ' + line);
+      
+        });
+
+
+};
 
 /**
  * Write array of bytes to file
  */
-function writeFile(filename, asmCode) {
+var writeFile = function(filename, asmCode) {
     // todo: open file for binary output
-}
+};
 
 /**
  * Begin main execution 
