@@ -1,7 +1,52 @@
 [
-	[0, "stop", 0, "TYPE_NONE", "TYPE_NONE", 0, ""],
-	[85, "set.string", 0, "TYPE_STRING", "TYPE_INT", 2, ""],
-	[86, "mov", 0, "TYPE_IDENTIFIER", "TYPE_BYTE", 1, "bx"],
-	[87, "mov", 0, "TYPE_IDENTIFIER", "TYPE_CHAR", 1, "cx"],
-	[88, "mov", 0, "TYPE_IDENTIFIER", "TYPE_STRING", 0, "sx"]
+	{
+		"opcode": 0, 
+	    "name":   "stop", 
+	    "size":   0, 
+	    "type":   "TYPE_NONE", 
+	    "type_b": "TYPE_NONE",
+	    "size_b": 0, 
+	    "identifier": ""
+	},
+
+	{
+		"opcode": 85, 
+	    "name":   "set.string", 
+	    "size":   0, 
+	    "type":   "TYPE_STRING", 
+	    "type_b": "TYPE_INT",
+	    "size_b": 2, 
+	    "identifier": ""		
+	},
+
+	{
+		"opcode": 86, 
+	    "name":   "mov", 
+	    "size":   0, 
+	    "type":   "TYPE_IDENTIFIER", 
+	    "type_b": "TYPE_BYTE",
+	    "size_b": 1, 
+	    "identifier": "bx"		
+	},
+
+	{
+		"opcode": 87, 
+	    "name":   "mov", 
+	    "size":   0, 
+	    "type":   "TYPE_IDENTIFIER", 
+	    "type_b": "TYPE_CHAR",
+	    "size_b": 1, 
+	    "identifier": "cx"		
+	},
+
+	{
+		"opcode": 88, 
+	    "name":   "mov", 
+	    "size":   0, 
+	    "type":   "TYPE_IDENTIFIER", 
+	    "type_b": "TYPE_STRING",
+	    "size_b": 1, 
+	    "identifier": "sx"		
+	}
+
 ]

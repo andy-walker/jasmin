@@ -13,7 +13,7 @@ var assemble = function(filename) {
     
     // initialize assembler vars
     var relocs             = [], 
-        instruction_name   = [], 
+        instruction_name   = '', 
         row                = [],
         instruction_offset = {},
         tmp                = [];
@@ -23,12 +23,19 @@ var assemble = function(filename) {
     var tmprow;
     var names = 0, offset = 0, offset_there, line_number = 0;
     var relocnotfound;
+    var fatal = false;
 
     // load opcode info
-    var instructions = require('./opcodes.json');
+    try {
+        var instructions = require('./opcodes.json');
+    } catch (error) {
+        console.log("Error reading opcodes.json");
+        process.exit(1);
+    }
 
     // read input file and iterate line by line
     fs.readFileSync(filename, 'utf8')
+        
         .split("\n")
         .map(function(line) {
             
@@ -38,6 +45,7 @@ var assemble = function(filename) {
             line = line.trim().split(';').shift();
 
             if (line.length) {
+                
                 // tokenize (split on colon, space, tab and comma)
                 if (tmprow = line.split(/[\:\s,]/)) { 
 
@@ -46,12 +54,75 @@ var assemble = function(filename) {
                         console.log("offset[" + tmprow[0] + "] = " + offset);
                     }
 
+                    // attempt to match instruction name to opcode
+                    instructions.forEach(function(instruction, index) {
+                        
+                        // if matched ..
+                        if (instruction.name == tmprow[0]) {
+                               
+                            instruction_name = instruction.name;
+                            console.log(
+                                "instruction (\n" + 
+                                "   size: " + instruction.size + "\n" +
+                                "   bytecode: " + instruction.opcode + "\n" +
+                                "   name: " + instruction.name + "\n" + 
+                                ")\n" + 
+                                "at offset: " + offset + "\n\n"
+                            );
+
+                            // parse instruction args ..
+                            if (instruction.type != 'TYPE_NONE') {
+                                switch (instruction.type) {
+                                    case 'TYPE_IDENTIFIER':
+                                        break;
+                                    case 'TYPE_OFFSET':
+                                        break;
+                                    case 'TYPE_BYTE':
+                                        break;
+                                    case 'TYPE_INT':
+                                        break;
+                                    case 'TYPE_4INT':
+                                        break;
+                                    case 'TYPE_CHAR':
+                                        break;
+                                    case 'TYPE_STRING':
+                                        break;
+                                    case 'TYPE_DEFINE_BYTE':
+                                        break;
+                                    case 'TYPE_DEFINE_4INT':
+                                        break;
+                                    case 'TYPE_DEFINE_INT':
+                                        break;
+                                    case 'TYPE_DEFINE_CHAR':
+                                        break;
+                                    case 'TYPE_DEFINE_STRING':
+                                        break;
+                                    case 'TYPE_ONLY_OPCODE':
+                                    case 'TYPE_NONE':
+                                        break;
+                                    default:
+                                        fatal = true;
+                                        return false;
+                                
+                                }
+                            
+                            }
+
+                        }
+
+                    });
+
+                    if (fatal)
+                        return false;
+
                 }
             
             } 
             
         });
 
+        if (fatal)
+            return false;
 
 };
 
