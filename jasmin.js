@@ -37,7 +37,7 @@ var assemble = function(filename) {
     fs.readFileSync(filename, 'utf8')
         
         .split("\n")
-        .map(function(line) {
+        .every(function(line) {
             
             line_number++;
 
@@ -48,67 +48,89 @@ var assemble = function(filename) {
                 
                 // tokenize (split on colon, space, tab and comma)
                 if (tmprow = line.split(/[\:\s,]/)) { 
+                    
+                    var token = tmprow.shift();
 
                     if (line.indexOf(':') >= 0) {
-                        instruction_offset[tmprow[0]] = offset;
-                        console.log("offset[" + tmprow[0] + "] = " + offset);
+                        
+                        instruction_offset[token] = offset;
+                        console.log("offset[" + token + "] = " + offset);
+                        
+                        // if no more tokens, continue on to next line
+                        if (!(token = tmprow.shift()))
+                            return true;
+                    
                     }
 
                     // attempt to match instruction name to opcode
-                    instructions.forEach(function(instruction, index) {
+                    instructions.every(function(instruction, index) {
                         
                         // if matched ..
-                        if (instruction.name == tmprow[0]) {
+                        if (token == instruction.name) {
                                
                             instruction_name = instruction.name;
                             console.log(
                                 "instruction (\n" + 
-                                "   size: " + instruction.size + "\n" +
+                                "   size: "     + instruction.size   + "\n" +
                                 "   bytecode: " + instruction.opcode + "\n" +
-                                "   name: " + instruction.name + "\n" + 
+                                "   name: "     + instruction.name   + "\n" + 
                                 ")\n" + 
                                 "at offset: " + offset + "\n\n"
                             );
 
-                            // parse instruction args ..
-                            if (instruction.type != 'TYPE_NONE') {
-                                switch (instruction.type) {
-                                    case 'TYPE_IDENTIFIER':
-                                        break;
-                                    case 'TYPE_OFFSET':
-                                        break;
-                                    case 'TYPE_BYTE':
-                                        break;
-                                    case 'TYPE_INT':
-                                        break;
-                                    case 'TYPE_4INT':
-                                        break;
-                                    case 'TYPE_CHAR':
-                                        break;
-                                    case 'TYPE_STRING':
-                                        break;
-                                    case 'TYPE_DEFINE_BYTE':
-                                        break;
-                                    case 'TYPE_DEFINE_4INT':
-                                        break;
-                                    case 'TYPE_DEFINE_INT':
-                                        break;
-                                    case 'TYPE_DEFINE_CHAR':
-                                        break;
-                                    case 'TYPE_DEFINE_STRING':
-                                        break;
-                                    case 'TYPE_ONLY_OPCODE':
-                                    case 'TYPE_NONE':
-                                        break;
-                                    default:
-                                        fatal = true;
-                                        return false;
+                            // parse instruction args ..                                
+                            switch (instruction.type) {
                                 
-                                }
+                                case 'TYPE_IDENTIFIER':
+                                    if (token = tmprow.shift()) {
+                                        instructions.forEach(function(_instruction) {
+                                            if (token == _instruction.identifier && instruction_name == _instruction.name) {
+                                                instruction = _instruction;
+                                                tmp[offset] = instruction.opcode;
+                                                console.log("Identifier corrected instruction opcode: " + instruction.opcode);
+                                            }
+                                        });
+                                    } else {
+                                        console.log("No address specified on line " + line_number);
+                                        process.exit(1)
+                                    }
+                                    break;
+                                case 'TYPE_OFFSET':
+                                    break;
+                                case 'TYPE_BYTE':
+                                    break;
+                                case 'TYPE_INT':
+                                    break;
+                                case 'TYPE_4INT':
+                                    break;
+                                case 'TYPE_CHAR':
+                                    break;
+                                case 'TYPE_STRING':
+                                    break;
+                                case 'TYPE_DEFINE_BYTE':
+                                    break;
+                                case 'TYPE_DEFINE_4INT':
+                                    break;
+                                case 'TYPE_DEFINE_INT':
+                                    break;
+                                case 'TYPE_DEFINE_CHAR':
+                                    break;
+                                case 'TYPE_DEFINE_STRING':
+                                    break;
+                                case 'TYPE_ONLY_OPCODE':
+                                case 'TYPE_NONE':
+                                    break;
+                                default:
+                                    return !(fatal = true);
+                                    
                             
                             }
+                            
+                        
 
                         }
+
+                        return true;
 
                     });
 
@@ -118,7 +140,7 @@ var assemble = function(filename) {
                 }
             
             } 
-            
+            return true;
         });
 
         if (fatal)
