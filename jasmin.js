@@ -6,6 +6,8 @@
 var fs     = require('fs');
 var Buffer = require('buffer').Buffer;
 
+var INSTRUCTION_INC = 1;
+
 /**
  * Assemble the specified filename to an array of bytes
  */
@@ -82,6 +84,7 @@ var assemble = function(filename) {
                             switch (instruction.type) {
                                 
                                 case 'TYPE_IDENTIFIER':
+                                    
                                     if (token = tmprow.shift()) {
                                         instructions.forEach(function(_instruction) {
                                             if (token == _instruction.identifier && instruction_name == _instruction.name) {
@@ -92,17 +95,62 @@ var assemble = function(filename) {
                                         });
                                     } else {
                                         console.log("No address specified on line " + line_number);
-                                        process.exit(1)
+                                        process.exit(1);
                                     }
+
                                     break;
+
                                 case 'TYPE_OFFSET':
+                                    // an offset relocation needs to be done
+                                    if (token = tmprow.shift()) {
+                                        relocs.push({
+                                            name:  token,
+                                            where: offset + INSTRUCTION_INC
+                                        });
+                                    } else {
+                                        console.log("No address specified on line " + line_number);
+                                        process.exit(1);
+                                    }
+
                                     break;
+
                                 case 'TYPE_BYTE':
+                                    
+                                    if (token = tmprow.shift()) {
+                                        tmp[offset+1] = parseInt(token) & 0xFF;
+                                    } else {
+                                        console.log("No register/value specified on line " + line_number);
+                                        process.exit(1);
+                                    }
+
                                     break;
+                                
                                 case 'TYPE_INT':
+
+                                    if (token = tmprow.shift()) {
+                                        tmp[offset+1] = parseInt(token) >> 8 & 0xFF;
+                                        tmp[offset+2] = parseInt(token) & 0xFF;
+                                    } else {
+                                        console.log("No register/value specified on line " + line_number);
+                                        process.exit(1);  
+                                    }
+
                                     break;
+
                                 case 'TYPE_4INT':
+
+                                    if (token = tmprow.shift()) {
+                                        tmp[offset+1] = parseInt(token) >> 24 & 0xFF;
+                                        tmp[offset+2] = parseInt(token) >> 16 & 0xFF;
+                                        tmp[offset+3] = parseInt(token) >> 8  & 0xFF;
+                                        tmp[offset+4] = parseInt(token) & 0xFF;
+                                    } else {
+                                        console.log("No register/value specified on line " + line_number);
+                                        process.exit(1);  
+                                    }
+
                                     break;
+                                    
                                 case 'TYPE_CHAR':
                                     break;
                                 case 'TYPE_STRING':
