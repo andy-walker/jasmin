@@ -1,0 +1,7 @@
+[
+	[0, "stop", 0, "TYPE_NONE", "TYPE_NONE", 0, ""],
+	[85, "set.string", 0, "TYPE_STRING", "TYPE_INT", 2, ""],
+	[86, "mov", 0, "TYPE_IDENTIFIER", "TYPE_BYTE", 1, "bx"],
+	[87, "mov", 0, "TYPE_IDENTIFIER", "TYPE_CHAR", 1, "cx"],
+	[88, "mov", 0, "TYPE_IDENTIFIER", "TYPE_STRING", 0, "sx"]
+]

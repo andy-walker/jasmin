@@ -15,23 +15,41 @@ var assemble = function(filename) {
     var relocs             = [], 
         instruction_name   = [], 
         row                = [],
-        offset_names       = [],
-        instruction_offset = [],
+        instruction_offset = {},
         tmp                = [];
+
     var i, i2, i3;
 
     var tmprow;
-    var names = 0, offset = 0, offset_there, actual_line = 0;
+    var names = 0, offset = 0, offset_there, line_number = 0;
     var relocnotfound;
+
+    // load opcode info
+    var instructions = require('./opcodes.json');
 
     // read input file and iterate line by line
     fs.readFileSync(filename, 'utf8')
-        .replace("\r", "")
         .split("\n")
         .map(function(line) {
-          
-            console.log('line is ' + line);
-      
+            
+            line_number++;
+
+            // trim leading/trailing whitespace, and anything after ';'
+            line = line.trim().split(';').shift();
+
+            if (line.length) {
+                // tokenize (split on colon, space, tab and comma)
+                if (tmprow = line.split(/[\:\s,]/)) { 
+
+                    if (line.indexOf(':') >= 0) {
+                        instruction_offset[tmprow[0]] = offset;
+                        console.log("offset[" + tmprow[0] + "] = " + offset);
+                    }
+
+                }
+            
+            } 
+            
         });
 
 
