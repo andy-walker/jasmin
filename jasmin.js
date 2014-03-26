@@ -117,7 +117,7 @@ var assemble = function(filename) {
                                 case 'TYPE_BYTE':
                                     
                                     if (token = tmprow.shift()) {
-                                        tmp[offset+1] = parseInt(token) & 0xFF;
+                                        tmp[offset+1] = parseInt(token) & 0xff;
                                     } else {
                                         console.log("No register/value specified on line " + line_number);
                                         process.exit(1);
@@ -128,8 +128,8 @@ var assemble = function(filename) {
                                 case 'TYPE_INT':
 
                                     if (token = tmprow.shift()) {
-                                        tmp[offset+1] = parseInt(token) >> 8 & 0xFF;
-                                        tmp[offset+2] = parseInt(token) & 0xFF;
+                                        tmp[offset+1] = parseInt(token) >> 8 & 0xff;
+                                        tmp[offset+2] = parseInt(token) & 0xff;
                                     } else {
                                         console.log("No register/value specified on line " + line_number);
                                         process.exit(1);  
@@ -140,42 +140,116 @@ var assemble = function(filename) {
                                 case 'TYPE_4INT':
 
                                     if (token = tmprow.shift()) {
-                                        tmp[offset+1] = parseInt(token) >> 24 & 0xFF;
-                                        tmp[offset+2] = parseInt(token) >> 16 & 0xFF;
-                                        tmp[offset+3] = parseInt(token) >> 8  & 0xFF;
-                                        tmp[offset+4] = parseInt(token) & 0xFF;
+                                        tmp[offset+1] = parseInt(token) >> 24 & 0xff;
+                                        tmp[offset+2] = parseInt(token) >> 16 & 0xff;
+                                        tmp[offset+3] = parseInt(token) >> 8  & 0xff;
+                                        tmp[offset+4] = parseInt(token) & 0xff;
                                     } else {
                                         console.log("No register/value specified on line " + line_number);
                                         process.exit(1);  
                                     }
 
                                     break;
-                                    
+
                                 case 'TYPE_CHAR':
+                                    // todo: this will get broken by spaces, commas and quotes inside quotes
+                                    // but to test for now ..
+                                    if (token = tmprow.shift() && token.match(/"/g) == 2) {
+                                        tmp[offset+1] = token.replace('"', '').charCodeAt(0); 
+                                    } else {
+                                        console.log("No character specified on line " + line_number);
+                                        process.exit(1);                                         
+                                    }
+
                                     break;
+
                                 case 'TYPE_STRING':
+
+                                    if (token = tmprow.shift() && token.match(/"/g) == 2) {
+                                        token = token.replace('"', '');
+                                        token.split('').forEach(function(character, index)) {
+                                            tmp[offset+index+1] = character.charCodeAt(0);
+                                        });
+                                        offset += token.length + 1;
+                                    } else {
+                                        console.log("No string specified on line " + line_number);
+                                        process.exit(1);                                         
+                                    }
+
                                     break;
+                                
                                 case 'TYPE_DEFINE_BYTE':
+                                    
+                                    if (token = tmprow.shift()) {
+                                        tmp[offset] = parseInt(token) & 0xff;
+                                    } else {
+                                        console.log("No byte defined on line " + line_number);
+                                        process.exit(1);  
+                                    }  
+
                                     break;
+
                                 case 'TYPE_DEFINE_4INT':
+
+                                    if (token = tmprow.shift()) {
+                                        tmp[offset]   = parseInt(token) >> 24 & 0xff;
+                                        tmp[offset+1] = parseInt(token) >> 16 & 0xff;
+                                        tmp[offset+2] = parseInt(token) >> 8  & 0xff;
+                                        tmp[offset+3] = parseInt(token) & 0xff;                                       
+                                    } else {
+                                        console.log("No int defined on line " + line_number);
+                                        process.exit(1);                                        
+                                    }
+
                                     break;
+
                                 case 'TYPE_DEFINE_INT':
+
+                                    if (token = tmprow.shift()) {
+                                        tmp[offset]   = parseInt(token) >> 8 & 0xff;
+                                        tmp[offset+1] = parseInt(token) & 0xff;                                         
+                                    } else {
+                                        console.log("No int defined on line " + line_number);
+                                        process.exit(1);   
+                                    }
+
                                     break;
+
                                 case 'TYPE_DEFINE_CHAR':
+                                    
+                                    if (token = tmprow.shift() && token.match(/"/g) == 2) {
+                                        tmp[offset] = token.replace('"', '').charCodeAt(0); 
+                                    } else {
+                                        console.log("No character defined on line " + line_number);
+                                        process.exit(1);                                         
+                                    }
+
                                     break;
+                                
                                 case 'TYPE_DEFINE_STRING':
+
+                                    if (token = tmprow.shift() && token.match(/"/g) == 2) {
+                                        token = token.replace('"', '');
+                                        token.split('').forEach(function(character, index)) {
+                                            tmp[offset+index] = character.charCodeAt(0);
+                                        });
+                                        offset += token.length;
+                                    } else {
+                                        console.log("No string specified on line " + line_number);
+                                        process.exit(1);                                         
+                                    }
+
                                     break;
+
                                 case 'TYPE_ONLY_OPCODE':
                                 case 'TYPE_NONE':
                                     break;
+                                
                                 default:
                                     return !(fatal = true);
                                     
-                            
                             }
                             
-                        
-
                         }
 
                         return true;
