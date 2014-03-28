@@ -1,5 +1,6 @@
 /**
- * Minimal assembler in javascript
+ * jasmin
+ * minimal javascript assembler
  * andyw, 24/03/2014
  */
 
@@ -167,7 +168,7 @@ var assemble = function(filename) {
 
                                     if (token = tmprow.shift() && token.match(/"/g) == 2) {
                                         token = token.replace('"', '');
-                                        token.split('').forEach(function(character, index)) {
+                                        token.split('').forEach(function(character, index) {
                                             tmp[offset+index+1] = character.charCodeAt(0);
                                         });
                                         offset += token.length + 1;
@@ -230,7 +231,7 @@ var assemble = function(filename) {
 
                                     if (token = tmprow.shift() && token.match(/"/g) == 2) {
                                         token = token.replace('"', '');
-                                        token.split('').forEach(function(character, index)) {
+                                        token.split('').forEach(function(character, index) {
                                             tmp[offset+index] = character.charCodeAt(0);
                                         });
                                         offset += token.length;
@@ -249,7 +250,118 @@ var assemble = function(filename) {
                                     return !(fatal = true);
                                     
                             }
+                            // incremement offset by instruction size
+                            offset += instruction.size;
+                        }
+
+                        offset+=INSTRUCTION_INC;
+
+                        // second param ..
+                        if (instruction.type_b != 'TYPE_NONE') {
                             
+                            switch (instruction.type_b) {
+                                
+                                case 'TYPE_OFFSET':
+                                    
+                                    // an offset relocation needs to be done
+                                    if (token = tmprow.shift()) {
+                                        relocs.push({
+                                            name:  token,
+                                            where: offset + INSTRUCTION_INC
+                                        });
+                                    } else {
+                                        console.log("No address specified on line " + line_number);
+                                        process.exit(1);
+                                    }
+
+                                    break;
+                            
+                                case 'TYPE_BYTE':
+                                
+                                    if (token = tmprow.shift()) {
+                                        tmp[offset] = parseInt(token) & 0xff;
+                                    } else {
+                                        console.log("No register/value specified on line " + line_number);
+                                        process.exit(1);
+                                    }
+
+                                    break;
+
+                                case 'TYPE_INT':
+                                    
+                                    if (token = tmprow.shift()) {
+                                        tmp[offset]   = parseInt(token) >> 8 & 0xff;
+                                        tmp[offset+1] = parseInt(token) & 0xff;
+                                    } else {
+                                        console.log("No register/value specified on line " + line_number);
+                                        process.exit(1);  
+                                    }
+
+                                    break;
+
+                                case 'TYPE_4INT':
+
+                                    if (token = tmprow.shift()) {
+                                        tmp[offset]   = parseInt(token) >> 24 & 0xff;
+                                        tmp[offset+1] = parseInt(token) >> 16 & 0xff;
+                                        tmp[offset+2] = parseInt(token) >> 8  & 0xff;
+                                        tmp[offset+3] = parseInt(token) & 0xff;
+                                    } else {
+                                        console.log("No register/value specified on line " + line_number);
+                                        process.exit(1);  
+                                    }                                   
+
+                                    break;
+
+                                case 'TYPE_CHAR':
+                                    
+                                    // todo: this will get broken by spaces, commas and quotes inside quotes
+                                    // but to test for now ..
+                                    if (token = tmprow.shift() && token.match(/"/g) == 2) {
+                                        tmp[offset+1] = token.replace('"', '').charCodeAt(0); 
+                                    } else {
+                                        console.log("No character specified on line " + line_number);
+                                        process.exit(1);                                         
+                                    }
+
+                                    break;
+
+                                case 'TYPE_STRING':
+
+                                    if (token = tmprow.shift() && token.match(/"/g) == 2) {
+                                        token = token.replace('"', '');
+                                        token.split('').forEach(function(character, index) {
+                                            tmp[offset+index] = character.charCodeAt(0);
+                                        });
+                                        offset += token.length + 1;
+                                    } else {
+                                        console.log("No string specified on line " + line_number);
+                                        process.exit(1);                                         
+                                    }                                   
+
+                                    break;
+
+                                case 'TYPE_DEFINE_BYTE':
+
+                                    if (token = tmprow.shift()) {
+                                        tmp[offset] = parseInt(token) & 0xff;
+                                    } else {
+                                        console.log("No byte defined on line " + line_number);
+                                        process.exit(1);  
+                                    }  
+
+                                    break;
+
+                                case 'TYPE_ONLY_OPCODE':
+                                case 'TYPE_NONE':
+                                    break;                                   
+ 
+                                default:
+                                    console.log("Error assembling file: " + line_number);
+                                    process.exit(1);
+
+                            }
+                            offset += instruction.size_b;
                         }
 
                         return true;
@@ -267,6 +379,8 @@ var assemble = function(filename) {
 
         if (fatal)
             return false;
+
+    // todo: relocs
 
 };
 
