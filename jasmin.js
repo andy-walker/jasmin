@@ -13,7 +13,14 @@ var INSTRUCTION_INC = 1;
  * Assemble the specified filename to an array of bytes
  */
 var assemble = function(filename) {
-    
+
+    // helper function
+    var convert_value = function(number, byte_position) {
+        if (byte_position == 1)
+            return (number & 0xff);
+        return (number >> 8);
+    };
+ 
     // initialize assembler vars
     var relocs             = [], 
         instruction_name   = '', 
@@ -21,11 +28,8 @@ var assemble = function(filename) {
         instruction_offset = {},
         tmp                = [];
 
-    var i, i2, i3;
-
     var tmprow;
     var names = 0, offset = 0, offset_there, line_number = 0;
-    var relocnotfound;
     var fatal = false;
 
     // load opcode info
@@ -380,7 +384,28 @@ var assemble = function(filename) {
         if (fatal)
             return false;
 
-    // todo: relocs
+    // relocs
+    console.log("Number of relocs to be done: " + relocs.length);
+    relocs.forEach(function(reloc) {
+        
+        var relocnotfound = true;
+        console.log("Label '" + reloc.name + "' at offset " + reloc.where);
+        
+        offset_names.every(function(offset_name, index) {
+            if (offset_name == reloc.name) {
+                console.log("Found '" + reloc.name + "' in offset table");
+                tmp[reloc.where]   = convert_value(instruction_offset[index], 0);
+                tmp[reloc.where+1] = convert_value(instruction_offset[index], 1);
+                return relocnotfound = false;
+            }
+        });
+        
+        if (relocnotfound) {
+            console.log("Error: offset '" + reloc.name + "' not found.");
+            process.exit(1);
+        }
+    
+    });
 
 };
 
