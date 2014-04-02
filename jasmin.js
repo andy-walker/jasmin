@@ -157,10 +157,12 @@ var assemble = function(filename) {
                                     break;
 
                                 case 'TYPE_CHAR':
-                                    // todo: this will get broken by spaces, commas and quotes inside quotes
-                                    // but to test for now ..
-                                    if (token = tmprow.shift() && token.match(/"/g) == 2) {
-                                        tmp[offset+1] = token.replace('"', '').charCodeAt(0); 
+                                    
+                                    if (token = tmprow.shift())
+                                        token = token.match(/^"."$/).pop();
+
+                                    if (token) {
+                                        tmp[offset+1] = token.slice(1, -1).charCodeAt(0);
                                     } else {
                                         console.log("No character specified on line " + line_number);
                                         process.exit(1);                                         
@@ -169,9 +171,12 @@ var assemble = function(filename) {
                                     break;
 
                                 case 'TYPE_STRING':
-
-                                    if (token = tmprow.shift() && token.match(/"/g) == 2) {
-                                        token = token.replace('"', '');
+                                    
+                                    if (token = tmprow.shift())
+                                        token = token.match(/^".*"$/g).pop();
+                                    
+                                    if (token) {
+                                        token = token.slice(1, -1);
                                         token.split('').forEach(function(character, index) {
                                             tmp[offset+index+1] = character.charCodeAt(0);
                                         });
@@ -222,8 +227,11 @@ var assemble = function(filename) {
 
                                 case 'TYPE_DEFINE_CHAR':
                                     
-                                    if (token = tmprow.shift() && token.match(/"/g) == 2) {
-                                        tmp[offset] = token.replace('"', '').charCodeAt(0); 
+                                    if (token = tmprow.shift())
+                                        token = token.match(/^"."$/).pop();
+
+                                    if (token) {
+                                        tmp[offset] = token.slice(1, -1).charCodeAt(0);
                                     } else {
                                         console.log("No character defined on line " + line_number);
                                         process.exit(1);                                         
@@ -259,7 +267,7 @@ var assemble = function(filename) {
                         }
 
                         offset+=INSTRUCTION_INC;
-
+                        
                         // second param ..
                         if (instruction.type_b != 'TYPE_NONE') {
                             
@@ -319,10 +327,11 @@ var assemble = function(filename) {
 
                                 case 'TYPE_CHAR':
                                     
-                                    // todo: this will get broken by spaces, commas and quotes inside quotes
-                                    // but to test for now ..
-                                    if (token = tmprow.shift() && token.match(/"/g) == 2) {
-                                        tmp[offset+1] = token.replace('"', '').charCodeAt(0); 
+                                    if (token = tmprow.shift())
+                                        token = token.match(/^"."$/).pop();
+
+                                    if (token) {
+                                        tmp[offset+1] = token.slice(1, -1).charCodeAt(0);
                                     } else {
                                         console.log("No character specified on line " + line_number);
                                         process.exit(1);                                         
@@ -332,8 +341,11 @@ var assemble = function(filename) {
 
                                 case 'TYPE_STRING':
 
-                                    if (token = tmprow.shift() && token.match(/"/g) == 2) {
-                                        token = token.replace('"', '');
+                                    if (token = tmprow.shift())
+                                        token = token.match(/^".*"$/g).pop();
+                                    
+                                    if (token) {
+                                        token = token.slice(1, -1);
                                         token.split('').forEach(function(character, index) {
                                             tmp[offset+index] = character.charCodeAt(0);
                                         });
@@ -341,7 +353,7 @@ var assemble = function(filename) {
                                     } else {
                                         console.log("No string specified on line " + line_number);
                                         process.exit(1);                                         
-                                    }                                   
+                                    }                                 
 
                                     break;
 
