@@ -45,8 +45,8 @@
         "size":   0, 
         "type":   "TYPE_IDENTIFIER", 
         "type_b": "TYPE_STRING",
-        "size_b": 1, 
-        "identifier": "sx"      
+        "size_b": 0, 
+        "identifier": "sx"
     }
 
 ]

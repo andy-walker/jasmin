@@ -26,9 +26,9 @@ var assemble = function(filename) {
         instruction_name   = '', 
         row                = [],
         instruction_offset = {},
-        tmp                = [];
+        buffer                = [];
 
-    var tmprow;
+    var row;
     var names = 0, offset = 0, offset_there, line_number = 0;
     var fatal = false;
 
@@ -54,9 +54,9 @@ var assemble = function(filename) {
             if (line.length) {
                 
                 // tokenize (split on colon, space, tab and comma)
-                if (tmprow = line.split(/[\:\s,]/)) { 
+                if (row = line.split(/[\:\s,]/)) { 
                     
-                    var token = tmprow.shift();
+                    var token = row.shift();
 
                     if (line.indexOf(':') >= 0) {
                         
@@ -64,7 +64,7 @@ var assemble = function(filename) {
                         console.log("offset[" + token + "] = " + offset);
                         
                         // if no more tokens, continue on to next line
-                        if (!(token = tmprow.shift()))
+                        if (!(token = row.shift()))
                             return true;
                     
                     }
@@ -74,7 +74,7 @@ var assemble = function(filename) {
                         
                         // if matched ..
                         if (token == instruction.name) {
-                            console.log('tmprow = ' + tmprow);
+                            console.log('row = ' + row);
                             instruction_name = instruction.name;
                             console.log(
                                 "instruction (\n" + 
@@ -85,16 +85,18 @@ var assemble = function(filename) {
                                 "at offset: " + offset + "\n\n"
                             );
 
+                            buffer[offset] = instruction.opcode; 
+
                             // parse instruction args ..                                
                             switch (instruction.type) {
                                 
                                 case 'TYPE_IDENTIFIER':
                                     
-                                    if (token = tmprow.shift()) {
+                                    if (token = row.shift()) {
                                         instructions.forEach(function(_instruction) {
                                             if (token == _instruction.identifier && instruction_name == _instruction.name) {
                                                 instruction = _instruction;
-                                                tmp[offset] = instruction.opcode;
+                                                buffer[offset] = instruction.opcode;
                                                 console.log("Identifier corrected instruction opcode: " + instruction.opcode);
                                             }
                                         });
@@ -107,7 +109,7 @@ var assemble = function(filename) {
 
                                 case 'TYPE_OFFSET':
                                     // an offset relocation needs to be done
-                                    if (token = tmprow.shift()) {
+                                    if (token = row.shift()) {
                                         relocs.push({
                                             name:  token,
                                             where: offset + INSTRUCTION_INC
@@ -121,8 +123,8 @@ var assemble = function(filename) {
 
                                 case 'TYPE_BYTE':
                                     
-                                    if (token = tmprow.shift()) {
-                                        tmp[offset+1] = parseInt(token) & 0xff;
+                                    if (token = row.shift()) {
+                                        buffer[offset+1] = parseInt(token) & 0xff;
                                     } else {
                                         console.log("No register/value specified on line " + line_number);
                                         process.exit(1);
@@ -132,9 +134,9 @@ var assemble = function(filename) {
                                 
                                 case 'TYPE_INT':
 
-                                    if (token = tmprow.shift()) {
-                                        tmp[offset+1] = parseInt(token) >> 8 & 0xff;
-                                        tmp[offset+2] = parseInt(token) & 0xff;
+                                    if (token = row.shift()) {
+                                        buffer[offset+1] = parseInt(token) >> 8 & 0xff;
+                                        buffer[offset+2] = parseInt(token) & 0xff;
                                     } else {
                                         console.log("No register/value specified on line " + line_number);
                                         process.exit(1);  
@@ -144,11 +146,11 @@ var assemble = function(filename) {
 
                                 case 'TYPE_4INT':
 
-                                    if (token = tmprow.shift()) {
-                                        tmp[offset+1] = parseInt(token) >> 24 & 0xff;
-                                        tmp[offset+2] = parseInt(token) >> 16 & 0xff;
-                                        tmp[offset+3] = parseInt(token) >> 8  & 0xff;
-                                        tmp[offset+4] = parseInt(token) & 0xff;
+                                    if (token = row.shift()) {
+                                        buffer[offset+1] = parseInt(token) >> 24 & 0xff;
+                                        buffer[offset+2] = parseInt(token) >> 16 & 0xff;
+                                        buffer[offset+3] = parseInt(token) >> 8  & 0xff;
+                                        buffer[offset+4] = parseInt(token) & 0xff;
                                     } else {
                                         console.log("No register/value specified on line " + line_number);
                                         process.exit(1);  
@@ -158,11 +160,11 @@ var assemble = function(filename) {
 
                                 case 'TYPE_CHAR':
                                     
-                                    if (token = tmprow.shift())
+                                    if (token = row.shift())
                                         token = token.match(/^"."$/).pop();
 
                                     if (token) {
-                                        tmp[offset+1] = token.slice(1, -1).charCodeAt(0);
+                                        buffer[offset+1] = token.slice(1, -1).charCodeAt(0);
                                     } else {
                                         console.log("No character specified on line " + line_number);
                                         process.exit(1);                                         
@@ -172,14 +174,15 @@ var assemble = function(filename) {
 
                                 case 'TYPE_STRING':
                                     
-                                    if (token = tmprow.shift())
+                                    if (token = row.shift())
                                         token = token.match(/^".*"$/g).pop();
                                     
                                     if (token) {
                                         token = token.slice(1, -1);
                                         token.split('').forEach(function(character, index) {
-                                            tmp[offset+index+1] = character.charCodeAt(0);
+                                            buffer[offset+index+1] = character.charCodeAt(0);
                                         });
+                                        buffer.push(0); // add string terminator
                                         offset += token.length + 1;
                                     } else {
                                         console.log("No string specified on line " + line_number);
@@ -190,8 +193,8 @@ var assemble = function(filename) {
                                 
                                 case 'TYPE_DEFINE_BYTE':
                                     
-                                    if (token = tmprow.shift()) {
-                                        tmp[offset] = parseInt(token) & 0xff;
+                                    if (token = row.shift()) {
+                                        buffer[offset] = parseInt(token) & 0xff;
                                     } else {
                                         console.log("No byte defined on line " + line_number);
                                         process.exit(1);  
@@ -201,11 +204,11 @@ var assemble = function(filename) {
 
                                 case 'TYPE_DEFINE_4INT':
 
-                                    if (token = tmprow.shift()) {
-                                        tmp[offset]   = parseInt(token) >> 24 & 0xff;
-                                        tmp[offset+1] = parseInt(token) >> 16 & 0xff;
-                                        tmp[offset+2] = parseInt(token) >> 8  & 0xff;
-                                        tmp[offset+3] = parseInt(token) & 0xff;                                       
+                                    if (token = row.shift()) {
+                                        buffer[offset]   = parseInt(token) >> 24 & 0xff;
+                                        buffer[offset+1] = parseInt(token) >> 16 & 0xff;
+                                        buffer[offset+2] = parseInt(token) >> 8  & 0xff;
+                                        buffer[offset+3] = parseInt(token) & 0xff;                                       
                                     } else {
                                         console.log("No int defined on line " + line_number);
                                         process.exit(1);                                        
@@ -215,9 +218,9 @@ var assemble = function(filename) {
 
                                 case 'TYPE_DEFINE_INT':
 
-                                    if (token = tmprow.shift()) {
-                                        tmp[offset]   = parseInt(token) >> 8 & 0xff;
-                                        tmp[offset+1] = parseInt(token) & 0xff;                                         
+                                    if (token = row.shift()) {
+                                        buffer[offset]   = parseInt(token) >> 8 & 0xff;
+                                        buffer[offset+1] = parseInt(token) & 0xff;                                         
                                     } else {
                                         console.log("No int defined on line " + line_number);
                                         process.exit(1);   
@@ -227,11 +230,11 @@ var assemble = function(filename) {
 
                                 case 'TYPE_DEFINE_CHAR':
                                     
-                                    if (token = tmprow.shift())
+                                    if (token = row.shift())
                                         token = token.match(/^"."$/).pop();
 
                                     if (token) {
-                                        tmp[offset] = token.slice(1, -1).charCodeAt(0);
+                                        buffer[offset] = token.slice(1, -1).charCodeAt(0);
                                     } else {
                                         console.log("No character defined on line " + line_number);
                                         process.exit(1);                                         
@@ -241,10 +244,10 @@ var assemble = function(filename) {
                                 
                                 case 'TYPE_DEFINE_STRING':
 
-                                    if (token = tmprow.shift() && token.match(/"/g) == 2) {
+                                    if (token = row.shift() && token.match(/"/g) == 2) {
                                         token = token.replace('"', '');
                                         token.split('').forEach(function(character, index) {
-                                            tmp[offset+index] = character.charCodeAt(0);
+                                            buffer[offset+index] = character.charCodeAt(0);
                                         });
                                         offset += token.length;
                                     } else {
@@ -262,10 +265,9 @@ var assemble = function(filename) {
                                     return !(fatal = true);
                                     
                             }
+                            
                             // incremement offset by instruction size
                             offset += instruction.size;
-                        
-                            console.log('tmprow2 = ' + tmprow);
                             offset+=INSTRUCTION_INC;
                             
                             // second param ..
@@ -276,7 +278,7 @@ var assemble = function(filename) {
                                     case 'TYPE_OFFSET':
                                         
                                         // an offset relocation needs to be done
-                                        if (token = tmprow.shift()) {
+                                        if (token = row.shift()) {
                                             relocs.push({
                                                 name:  token,
                                                 where: offset + INSTRUCTION_INC
@@ -290,8 +292,8 @@ var assemble = function(filename) {
                                 
                                     case 'TYPE_BYTE':
                                     
-                                        if (token = tmprow.shift()) {
-                                            tmp[offset] = parseInt(token) & 0xff;
+                                        if (token = row.shift()) {
+                                            buffer[offset] = parseInt(token) & 0xff;
                                         } else {
                                             console.log("No register/value specified on line " + line_number);
                                             process.exit(1);
@@ -301,9 +303,9 @@ var assemble = function(filename) {
 
                                     case 'TYPE_INT':
                                         
-                                        if (token = tmprow.shift()) {
-                                            tmp[offset]   = parseInt(token) >> 8 & 0xff;
-                                            tmp[offset+1] = parseInt(token) & 0xff;
+                                        if (token = row.shift()) {
+                                            buffer[offset]   = parseInt(token) >> 8 & 0xff;
+                                            buffer[offset+1] = parseInt(token) & 0xff;
                                         } else {
                                             console.log("No register/value specified on line " + line_number);
                                             process.exit(1);  
@@ -313,11 +315,11 @@ var assemble = function(filename) {
 
                                     case 'TYPE_4INT':
 
-                                        if (token = tmprow.shift()) {
-                                            tmp[offset]   = parseInt(token) >> 24 & 0xff;
-                                            tmp[offset+1] = parseInt(token) >> 16 & 0xff;
-                                            tmp[offset+2] = parseInt(token) >> 8  & 0xff;
-                                            tmp[offset+3] = parseInt(token) & 0xff;
+                                        if (token = row.shift()) {
+                                            buffer[offset]   = parseInt(token) >> 24 & 0xff;
+                                            buffer[offset+1] = parseInt(token) >> 16 & 0xff;
+                                            buffer[offset+2] = parseInt(token) >> 8  & 0xff;
+                                            buffer[offset+3] = parseInt(token) & 0xff;
                                         } else {
                                             console.log("No register/value specified on line " + line_number);
                                             process.exit(1);  
@@ -327,11 +329,11 @@ var assemble = function(filename) {
 
                                     case 'TYPE_CHAR':
                                         
-                                        if (token = tmprow.shift())
+                                        if (token = row.shift())
                                             token = token.match(/^"."$/).pop();
 
                                         if (token) {
-                                            tmp[offset+1] = token.slice(1, -1).charCodeAt(0);
+                                            buffer[offset] = token.slice(1, -1).charCodeAt(0);
                                         } else {
                                             console.log("No character specified on line " + line_number);
                                             process.exit(1);                                         
@@ -341,14 +343,15 @@ var assemble = function(filename) {
 
                                     case 'TYPE_STRING':
 
-                                        if (token = tmprow.shift())
+                                        if (token = row.shift())
                                             token = token.match(/^".*"$/g).pop();
                                         
                                         if (token) {
                                             token = token.slice(1, -1);
                                             token.split('').forEach(function(character, index) {
-                                                tmp[offset+index] = character.charCodeAt(0);
+                                                buffer[offset+index] = character.charCodeAt(0);
                                             });
+                                            buffer.push(0); // add string terminator
                                             offset += token.length + 1;
                                         } else {
                                             console.log("No string specified on line " + line_number);
@@ -359,8 +362,8 @@ var assemble = function(filename) {
 
                                     case 'TYPE_DEFINE_BYTE':
 
-                                        if (token = tmprow.shift()) {
-                                            tmp[offset] = parseInt(token) & 0xff;
+                                        if (token = row.shift()) {
+                                            buffer[offset] = parseInt(token) & 0xff;
                                         } else {
                                             console.log("No byte defined on line " + line_number);
                                             process.exit(1);  
@@ -408,8 +411,8 @@ var assemble = function(filename) {
         offset_names.every(function(offset_name, index) {
             if (offset_name == reloc.name) {
                 console.log("Found '" + reloc.name + "' in offset table");
-                tmp[reloc.where]   = convert_value(instruction_offset[index], 0);
-                tmp[reloc.where+1] = convert_value(instruction_offset[index], 1);
+                buffer[reloc.where]   = convert_value(instruction_offset[index], 0);
+                buffer[reloc.where+1] = convert_value(instruction_offset[index], 1);
                 return relocnotfound = false;
             }
         });
@@ -421,7 +424,7 @@ var assemble = function(filename) {
     
     });
 
-    return tmp;
+    return buffer;
 
 };
 
@@ -453,7 +456,7 @@ var writeFile = function(filename, asmCode) {
 
     // assemble input file
     if (asmCode = assemble(argv[2])) {
-        console.log(asmCode);
+
         console.log("Assembled to " + asmCode.length + " bytes.");
 
         // use specified output file or default if not supplied
