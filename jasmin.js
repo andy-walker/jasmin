@@ -26,10 +26,10 @@ var assemble = function(filename) {
         instruction_name   = '', 
         row                = [],
         instruction_offset = {},
-        buffer                = [];
+        buffer             = [];
 
     var row;
-    var names = 0, offset = 0, offset_there, line_number = 0;
+    var names = 0, offset = 0, line_number = 0;
     var fatal = false;
 
     // load opcode info
@@ -266,7 +266,7 @@ var assemble = function(filename) {
                                     
                             }
                             
-                            // incremement offset by instruction size
+                            // increment offset by instruction size
                             offset += instruction.size;
                             offset+=INSTRUCTION_INC;
                             
@@ -432,7 +432,13 @@ var assemble = function(filename) {
  * Write array of bytes to file
  */
 var writeFile = function(filename, asmCode) {
-    // todo: open file for binary output
+
+    var file    = fs.openSync(filename, 'w');
+    var buffer  = new Buffer(asmCode);
+    var written = fs.writeSync(file, buffer, 0, buffer.length, 0);
+
+    return written == buffer.length;
+
 };
 
 /**
