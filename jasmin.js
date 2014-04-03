@@ -74,7 +74,7 @@ var assemble = function(filename) {
                         
                         // if matched ..
                         if (token == instruction.name) {
-                            console.log('row = ' + row);
+       
                             instruction_name = instruction.name;
                             console.log(
                                 "instruction (\n" + 
