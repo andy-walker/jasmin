@@ -50,7 +50,7 @@ var assemble = function(filename) {
 
             if (line.length) {
                 
-                // tokenize (split on colon, space, tab and comma)
+                // tokenize line
                 if (tokens = tokenize(line)) { 
                     
                     var token = tokens.shift();
