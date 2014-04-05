@@ -3,7 +3,7 @@ jasmin
 
 Minimal javascript assembler
 
-usage
------
+Usage:
+------
 
 node jasmin.js input-file [output-file]
