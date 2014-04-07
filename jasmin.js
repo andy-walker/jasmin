@@ -18,7 +18,7 @@ String.prototype.scanFor = function(match_char) {
     quote_count = 0;
     matched     = false;
     
-    this.split('').forEach(function(current_char) {
+    this.split('').every(function(current_char) {
         if (current_char == '"')
             quote_count++;
         // if matched character, and even or zero number of quotes to the left hand side
