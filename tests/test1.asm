@@ -1,5 +1,7 @@
 ; initial test asm file
 
+test_label:
+
 set.string "hello, world!",2
 
 mov cx,"l"

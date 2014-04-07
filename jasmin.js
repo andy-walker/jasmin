@@ -10,6 +10,30 @@ var Buffer = require('buffer').Buffer;
 var INSTRUCTION_INC = 1;
 
 /**
+ * Helper string prototype - determines if the character exists in a string
+ * *outside* of quotation marks
+ */
+String.prototype.scanFor = function(match_char) {
+    
+    quote_count = 0;
+    matched     = false;
+    
+    this.split('').forEach(function(current_char) {
+        if (current_char == '"')
+            quote_count++;
+        // if matched, and no previous match, and even or zero number 
+        // of quotes to the left hand side
+        else if (current_char == match_char && quote_count % 2 == 0 && !matched) {
+            console.log('matched!');
+            matched = true;
+        }
+    });
+    
+    return matched;
+
+};
+
+/**
  * Assemble the specified filename to an array of bytes
  */
 var assemble = function(filename) {
@@ -55,7 +79,7 @@ var assemble = function(filename) {
                     
                     var token = tokens.shift();
 
-                    if (line.indexOf(':') >= 0) {
+                    if (line.scanFor(':')) {
                         
                         instruction_offset[token] = offset;
                         console.log("offset[" + token + "] = " + offset);
