@@ -21,12 +21,11 @@ String.prototype.scanFor = function(match_char) {
     this.split('').forEach(function(current_char) {
         if (current_char == '"')
             quote_count++;
-        // if matched, and no previous match, and even or zero number 
-        // of quotes to the left hand side
-        else if (current_char == match_char && quote_count % 2 == 0 && !matched) {
-            console.log('matched!');
-            matched = true;
-        }
+        // if matched character, and even or zero number of quotes to the left hand side
+        // set matched to true and return false to stop scanning
+        else if (current_char == match_char && quote_count % 2 == 0)
+            return !(matched = true);
+
     });
     
     return matched;
