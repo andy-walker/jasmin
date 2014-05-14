@@ -47,7 +47,7 @@ var assemble = function(filename) {
     // initialize assembler vars
     var relocs             = [], 
         instruction_name   = '', 
-        tokens                = [],
+        tokens             = [],
         instruction_offset = {},
         buffer             = [];
 
@@ -70,6 +70,7 @@ var assemble = function(filename) {
         .every(function(line) {
             
             line_number++;
+            line = line.trim();
 
             if (line.length) {
                 
@@ -115,7 +116,7 @@ var assemble = function(filename) {
                                     if (token = tokens.shift()) {
                                         instructions.forEach(function(_instruction) {
                                             if (token == _instruction.identifier && instruction_name == _instruction.name) {
-                                                instruction = _instruction;
+                                                instruction    = _instruction;
                                                 buffer[offset] = instruction.opcode;
                                                 console.log("Identifier corrected instruction opcode: " + instruction.opcode);
                                             }
@@ -511,6 +512,63 @@ var tokenize = function(line) {
 };
 
 /**
+ * Get arguments and options that were passed in
+ */
+var getConfig = function() {
+    
+    config = {
+        input_file:    '',
+        output_file:   '',
+        output_format: '',
+        output_arch:   ''
+    };
+
+    process.argv.slice(2).forEach(function(value) {
+        
+        // attempt to split item on '=', if length is 2, treat as option
+        var splitValue = value.split('=');
+        
+        if (splitValue.length > 1) {
+            
+            switch (splitValue[0]) {
+                case '--format':
+                    config.output_format = splitValue[1];
+                    break;
+                case '--arch':
+                    config.output_arch = splitValue[1];
+                    break;
+                default:
+                    console.log("Unrecognized option '" + splitValue[0] + "'.");
+                    process.exit(1);
+            }
+
+        // otherwise, item is an argument
+        } else {
+            
+            if (!config.input_file)
+                config.input_file = value;
+            else
+                config.output_file = value;
+        
+        }
+
+    });
+
+    // check at least input file specified
+    if (!config.input_file) {
+        console.log("Usage: node jasmin.js <input-file> [output-file]");
+        process.exit(1);
+    }
+
+    // set defaults if not specified
+    if (!config.output_file)
+        config.output_file = 'out.bytes';
+
+    return config;
+
+};
+
+/**
  * Write array of bytes to file
  */
 var writeFile = function(filename, asmCode) {
@@ -528,31 +586,22 @@ var writeFile = function(filename, asmCode) {
  */
 (function() {
     
-    var argv = process.argv;
-
-    // check at least input file specified
-    if (argv.length <= 2) {
-        console.log("Usage: node jasmin.js <input-file> [output-file]");
-        process.exit(1);
-    }
+    config = getConfig();
 
     // check input file exists
-    if (!fs.existsSync(argv[2])) {
-        console.log("Input file '" + argv[2] + "' does not exist.");
+    if (!fs.existsSync(config.input_file)) {
+        console.log("Input file '" + config.input_file + "' does not exist.");
         process.exit(1);
     }
 
     // assemble input file
-    if (asmCode = assemble(argv[2])) {
+    if (asmCode = assemble(config.input_file)) {
 
         console.log("Assembled to " + asmCode.length + " bytes.");
 
-        // use specified output file or default if not supplied
-        var filename = argv.length > 3 ? argv[3] : 'out.bytes';
-
         // write to output file
-        if (!writeFile(filename, asmCode)) {
-            console.log("An error occurred writing to " + filename);
+        if (!writeFile(config.output_file, asmCode)) {
+            console.log("An error occurred writing to " + config.output_file);
             process.exit(1);
         }
         
