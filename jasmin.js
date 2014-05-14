@@ -556,7 +556,7 @@ var getConfig = function() {
 
     // check at least input file specified
     if (!config.input_file) {
-        console.log("Usage: node jasmin.js <input-file> [output-file]");
+        console.log("Usage: node jasmin.js <input-file> [output-file] [options]");
         process.exit(1);
     }
 
